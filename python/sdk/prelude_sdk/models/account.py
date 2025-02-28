@@ -137,13 +137,13 @@ class Account(HttpController):
 
     def get_token(self):
         tokens = self._read_tokens().get(self.handle, {}).get(self.hq, {})
-        if "id_token" not in tokens:
+        if "token" not in tokens:
             raise Exception("Please login to continue")
         if float(tokens["expires"]) < datetime.now(timezone.utc).timestamp():
             raise Exception(
                 "Token expired, please either login or refresh token to continue"
             )
-        return tokens["id_token"]
+        return tokens["token"]
 
 
 def verify_credentials(func):
