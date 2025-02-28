@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 
-import requests
+from prelude_sdk.controllers.http_controller import HttpController
 
 
 class Keychain:
@@ -29,7 +29,7 @@ class Keychain:
         self,
         account,
         handle,
-        hq="https://api.preludesecurity.com",
+        hq="https://api.us1.preludesecurity.com",
         profile="default",
     ):
         cfg = self.read_keychain()
@@ -44,12 +44,12 @@ class Keychain:
             return cfg[profile]
         except StopIteration:
             raise Exception(
-                "Could not find profile for account %s in %s"
+                "Could not find profile %s for account in %s"
                 % (profile, self.keychain_location)
             )
 
 
-class Account:
+class Account(HttpController):
 
     def __init__(
         self,
@@ -78,7 +78,7 @@ class Account:
 
     @staticmethod
     def from_params(
-        account: str, handle: str, hq: str = "https://api.preludesecurity.com"
+        account: str, handle: str, hq: str = "https://api.us1.preludesecurity.com"
     ):
         return Account(account, handle, hq)
 
@@ -102,7 +102,7 @@ class Account:
 
     def password_login(self, password):
         self._verify_profile()
-        res = requests.post(
+        res = self._session.post(
             f"{self.hq}/iam/token",
             headers=self.headers,
             json=dict(
@@ -121,7 +121,7 @@ class Account:
         existing_tokens = self._read_tokens().get(self.handle, {}).get(self.hq, {})
         if not (refresh_token := existing_tokens.get("refresh_token")):
             raise Exception("No refresh token found, please login first to continue")
-        res = requests.post(
+        res = self._session.post(
             f"{self.hq}/iam/token",
             headers=self.headers,
             json=dict(
