@@ -108,9 +108,9 @@ class IAMController(HttpController):
     @verify_credentials
     def invite_user(
         self,
-        permission: Permission,
         email: str,
         oidc: str | None,
+        permission: Permission,
         name: str | None = None,
     ):
         """Invite a new user to the account"""
@@ -129,9 +129,9 @@ class IAMController(HttpController):
         raise Exception(res.text)
 
     @verify_credentials
-    def create_service_user(self, handle):
+    def create_service_user(self, email: str):
         """Create a service user"""
-        body = dict(handle=handle)
+        body = dict(handle=email)
 
         res = self._session.post(
             f"{self.account.hq}/iam/account/service_user",
@@ -186,18 +186,6 @@ class IAMController(HttpController):
         raise Exception(res.text)
 
     @verify_credentials
-    def list_accounts(self):
-        """List all accounts"""
-        res = self._session.get(
-            f"{self.account.hq}/iam/user/account",
-            headers=self.account.headers,
-            timeout=10,
-        )
-        if res.status_code == 200:
-            return res.json()
-        raise Exception(res.text)
-
-    @verify_credentials
     def remove_user(self, email: str, oidc: str | None):
         """Remove user from the account"""
         params = dict(handle=email, oidc=oidc)
@@ -217,6 +205,18 @@ class IAMController(HttpController):
         """Delete your user"""
         res = self._session.delete(
             f"{self.account.hq}/iam/user", headers=self.account.headers, timeout=10
+        )
+        if res.status_code == 200:
+            return res.json()
+        raise Exception(res.text)
+
+    @verify_credentials
+    def list_accounts(self):
+        """List all accounts for your user"""
+        res = self._session.get(
+            f"{self.account.hq}/iam/user/account",
+            headers=self.account.headers,
+            timeout=10,
         )
         if res.status_code == 200:
             return res.json()
