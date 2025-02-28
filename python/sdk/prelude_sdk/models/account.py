@@ -59,6 +59,7 @@ class Account(HttpController):
         token_location=os.path.join(Path.home(), ".prelude", "tokens.json"),
         profile: str | None = None,
     ):
+        super().__init__()
         self.account = account
         self.handle = handle
         self.headers = dict(account=account, _product="py-sdk")
@@ -132,7 +133,10 @@ class Account(HttpController):
             timeout=10,
         )
         if not res.ok:
-            raise Exception("Error refreshing token: %s" % res.text)
+            raise Exception(
+                "Error refreshing token: %s. Please reauthenticate to obtain a new refresh token."
+                % res.text
+            )
         self._save_new_token(existing_tokens | res.json())
 
     def get_token(self):
@@ -140,9 +144,8 @@ class Account(HttpController):
         if "token" not in tokens:
             raise Exception("Please login to continue")
         if float(tokens["expires"]) < datetime.now(timezone.utc).timestamp():
-            raise Exception(
-                "Token expired, please either login or refresh token to continue"
-            )
+            self.refresh_tokens()
+            return self.get_token()
         return tokens["token"]
 
 
