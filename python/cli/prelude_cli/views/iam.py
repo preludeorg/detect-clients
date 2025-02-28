@@ -14,6 +14,14 @@ def iam(ctx):
     ctx.obj = IAMController(account=ctx.obj)
 
 
+@iam.command("migrate")
+@click.pass_obj
+@pretty_print
+def migrate(controller):
+    with Spinner(description="Migrating keychain"):
+        return controller.migrate()
+
+
 @iam.command("create-account")
 @click.pass_obj
 @pretty_print
