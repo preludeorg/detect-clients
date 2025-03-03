@@ -56,9 +56,15 @@ class Account(HttpController):
         account: str,
         handle: str,
         hq: str,
-        token_location=os.path.join(Path.home(), ".prelude", "tokens.json"),
         profile: str | None = None,
+        token: str | None = None,
+        token_location: str | None = os.path.join(
+            Path.home(), ".prelude", "tokens.json"
+        ),
     ):
+        if not any([token, token_location]):
+            raise ValueError("Please provide either an ID token or a token location")
+
         super().__init__()
         self.account = account
         self.handle = handle
@@ -66,8 +72,9 @@ class Account(HttpController):
         self.hq = hq
         self.keychain = Keychain()
         self.profile = profile
+        self.token = token
         self.token_location = token_location
-        if not os.path.exists(self.token_location):
+        if self.token_location and not os.path.exists(self.token_location):
             head, _ = os.path.split(Path(self.token_location))
             Path(head).mkdir(parents=True, exist_ok=True)
             with open(self.token_location, "x") as f:
@@ -75,13 +82,25 @@ class Account(HttpController):
 
     @staticmethod
     def from_keychain(profile: str = "default"):
-        return Account(**dict(Keychain().get_profile(profile).items()), profile=profile)
+        profile_items = dict(Keychain().get_profile(profile).items())
+        if "token" in profile_items or "handle" not in profile_items:
+            raise ValueError("Please make sure you are using an up-to-date profile")
+        return Account(**profile_items, profile=profile)
 
     @staticmethod
     def from_params(
         account: str, handle: str, hq: str = "https://api.us1.preludesecurity.com"
     ):
         return Account(account, handle, hq)
+
+    @staticmethod
+    def from_token(
+        account: str,
+        handle: str,
+        token: str,
+        hq: str = "https://api.us1.preludesecurity.com",
+    ):
+        return Account(account, handle, hq, token=token, token_location=None)
 
     def _read_tokens(self):
         with open(self.token_location, "r") as f:
@@ -95,14 +114,16 @@ class Account(HttpController):
         with open(self.token_location, "w") as f:
             json.dump(existing_tokens, f)
 
-    def _verify_profile(self):
+    def _verify(self):
+        if not self.token_location:
+            raise ValueError("Please provide a token location to continue")
         if self.profile and not any([self.handle, self.account]):
-            raise Exception(
+            raise ValueError(
                 "Please configure your %s profile to continue" % self.profile
             )
 
     def password_login(self, password):
-        self._verify_profile()
+        self._verify()
         res = self._session.post(
             f"{self.hq}/iam/token",
             headers=self.headers,
@@ -118,7 +139,7 @@ class Account(HttpController):
         self._save_new_token(res.json())
 
     def refresh_tokens(self):
-        self._verify_profile()
+        self._verify()
         existing_tokens = self._read_tokens().get(self.handle, {}).get(self.hq, {})
         if not (refresh_token := existing_tokens.get("refresh_token")):
             raise Exception("No refresh token found, please login first to continue")
@@ -140,6 +161,9 @@ class Account(HttpController):
         self._save_new_token(existing_tokens | res.json())
 
     def get_token(self):
+        if self.token:
+            return self.token
+
         tokens = self._read_tokens().get(self.handle, {}).get(self.hq, {})
         if "token" not in tokens:
             raise Exception("Please login to continue")

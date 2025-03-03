@@ -26,8 +26,24 @@ def complete_profile(ctx, param, incomplete):
     show_default=True,
     shell_complete=complete_profile,
 )
-def cli(ctx, profile):
-    ctx.obj = Account.from_keychain(profile=profile)
+@click.option("--account", default=None, help="Account ID")
+@click.option("--handle", default=None, help="User handle (email)")
+@click.option("--hq", default="https://api.us1.preludesecurity.com", help="Prelude API")
+@click.option(
+    "--token",
+    default=None,
+    help="ID token. Must also provide account, handle, and hq if used.",
+)
+@click.option
+def cli(ctx, profile, account, handle, hq, token):
+    if profile:
+        ctx.obj = Account.from_keychain(profile=profile)
+    elif all([account, handle, hq, token]):
+        ctx.obj = Account.from_token(account, handle, token, hq=hq)
+    else:
+        raise Exception(
+            "Please provide either a profile or account, handle, hq, and token"
+        )
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
