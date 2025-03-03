@@ -1,6 +1,6 @@
 import click
 
-from datetime import datetime, timedelta, timezone
+import requests
 
 from prelude_sdk.models.codes import AuditEvent, Mode, Permission
 from prelude_cli.views.shared import Spinner, pretty_print
@@ -254,3 +254,15 @@ def logs(controller, days, limit):
     """Get audit logs"""
     with Spinner(description="Fetching logs"):
         return controller.audit_logs(days=days, limit=limit)
+
+
+@iam.command("new-user-and-account", hidden=True)
+@click.argument("email", type=str, required=True)
+@click.option("-c", "--company", type=str, required=True)
+@click.option("-n", "--name", type=str, required=True)
+@click.pass_obj
+@pretty_print
+def new_user_and_account(controller, email, company, name):
+    """Create a new user and account"""
+    with Spinner(description="Creating new user and account"):
+        return controller.new_user_and_account(email=email, company=company, name=name)

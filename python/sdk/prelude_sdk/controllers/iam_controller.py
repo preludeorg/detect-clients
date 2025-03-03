@@ -250,3 +250,18 @@ class IAMController(HttpController):
         if res.status_code == 200:
             return res.json()
         raise Exception(res.text)
+
+    @verify_credentials
+    def new_user_and_account(self, company, email, name):
+        """Create a new user and account"""
+        body = dict(company=company, email=email, name=name)
+
+        res = self._session.post(
+            f"{self.account.hq}/iam/new_user_and_account",
+            headers=self.account.headers,
+            json=body,
+            timeout=10,
+        )
+        if res.ok:
+            return res.json()
+        raise Exception(res.text)
