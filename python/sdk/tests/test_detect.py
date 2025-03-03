@@ -206,3 +206,28 @@ class TestDetect:
         res = unwrap(self.detect.list_endpoints)(self.detect)
         ep = [r for r in res if r["serial_num"] == self.serial]
         assert 0 == len(ep), json.dumps(ep, indent=2)
+
+    def test_accept_terms(self, unwrap):
+        for user in pytest.expected_account["users"]:
+            if user["handle"] == pytest.expected_account["whoami"]:
+                if user["terms"].get("threat_intel", {}).get("1.0.0"):
+                    with pytest.raises(Exception) as e:
+                        unwrap(self.detect.accept_terms)(
+                            self.detect, name="threat_intel", version="1.0.0"
+                        )
+                    return
+
+        unwrap(self.detect.accept_terms)(
+            self.detect, name="threat_intel", version="1.0.0"
+        )
+        res = unwrap(self.iam.get_account)(self.iam)
+
+        for user in res["users"]:
+            if user["handle"] == pytest.expected_account["whoami"]:
+                assert user["terms"].get("threat_intel", {}).get("1.0.0"), json.dumps(
+                    user, indent=2
+                )
+                assert parse(user["terms"]["threat_intel"]["1.0.0"]) <= datetime.now(
+                    timezone.utc
+                )
+                break

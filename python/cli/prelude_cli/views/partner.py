@@ -124,19 +124,6 @@ def partner_deploy(controller, partner, host_ids):
         return controller.deploy(partner=Control[partner], host_ids=host_ids)
 
 
-@partner.command("generate-webhook")
-@click.argument(
-    "partner",
-    type=click.Choice(["DEFENDER", "SENTINELONE", "CROWDSTRIKE"], case_sensitive=False),
-)
-@click.pass_obj
-@pretty_print
-def generate_webhook(controller, partner):
-    """Generate webhook credentials for an EDR system to enable the forwarding of alerts to the Prelude API, facilitating automatic alert suppression"""
-    with Spinner(description="Generating webhook credentials"):
-        return controller.generate_webhook(partner=Control[partner])
-
-
 @partner.command("reports")
 @click.argument(
     "partner", type=click.Choice([Control.CROWDSTRIKE.name], case_sensitive=False)

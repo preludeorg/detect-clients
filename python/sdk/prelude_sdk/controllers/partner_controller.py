@@ -1,13 +1,13 @@
 from datetime import datetime, timezone
 
 from prelude_sdk.controllers.http_controller import HttpController
-from prelude_sdk.models.account import verify_credentials
+from prelude_sdk.models.account import Account, verify_credentials
 from prelude_sdk.models.codes import Control
 
 
 class PartnerController(HttpController):
 
-    def __init__(self, account):
+    def __init__(self, account: Account):
         super().__init__()
         self.account = account
 
@@ -83,18 +83,6 @@ class PartnerController(HttpController):
             f"{self.account.hq}/partner/endpoints/{partner.name}",
             headers=self.account.headers,
             params=params,
-            timeout=30,
-        )
-        if res.status_code == 200:
-            return res.json()
-        raise Exception(res.text)
-
-    @verify_credentials
-    def generate_webhook(self, partner: Control):
-        """Generate webhook credentials for an EDR system to enable the forwarding of alerts to the Prelude API, facilitating automatic alert suppression"""
-        res = self._session.get(
-            f"{self.account.hq}/partner/suppress/{partner.name}",
-            headers=self.account.headers,
             timeout=30,
         )
         if res.status_code == 200:

@@ -1,11 +1,10 @@
 from prelude_sdk.controllers.http_controller import HttpController
-
-from prelude_sdk.models.account import verify_credentials
+from prelude_sdk.models.account import Account, verify_credentials
 
 
 class DetectController(HttpController):
 
-    def __init__(self, account):
+    def __init__(self, account: Account):
         super().__init__()
         self.account = account
 
@@ -265,6 +264,19 @@ class DetectController(HttpController):
             f"{self.account.hq}/detect/queue",
             headers=self.account.headers,
             json=dict(items=items),
+            timeout=10,
+        )
+        if res.status_code == 200:
+            return res.json()
+        raise Exception(res.text)
+
+    @verify_credentials
+    def accept_terms(self, name, version):
+        """Accept terms and conditions"""
+        res = self._session.post(
+            f"{self.account.hq}/detect/terms",
+            headers=self.account.headers,
+            json=dict(name=name, version=version),
             timeout=10,
         )
         if res.status_code == 200:

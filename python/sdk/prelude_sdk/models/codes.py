@@ -52,7 +52,6 @@ class Permission(Enum, metaclass=MissingItem):
     EXECUTIVE = 1
     BUILD = 2
     SERVICE = 3
-    AUTO = 4
     SUPPORT = 5
 
     @classmethod

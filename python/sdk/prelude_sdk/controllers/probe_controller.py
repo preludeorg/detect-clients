@@ -1,9 +1,10 @@
 from prelude_sdk.controllers.http_controller import HttpController
+from prelude_sdk.models.account import Account
 
 
 class ProbeController(HttpController):
 
-    def __init__(self, account):
+    def __init__(self, account: Account):
         super().__init__()
         self.account = account
 

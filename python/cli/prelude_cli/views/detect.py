@@ -418,3 +418,14 @@ def threat_hunt_activity(controller, id, type):
             return controller.threat_hunt_activity(test_id=id)
         else:
             return controller.threat_hunt_activity(threat_id=id)
+
+
+@detect.command("accept-terms", hidden=True)
+@click.argument("name", type=str, required=True)
+@click.option("-v", "--version", type=int, required=True)
+@click.pass_obj
+@pretty_print
+def accept_terms(controller, name, version):
+    """Accept terms and conditions"""
+    with Spinner(description="Accepting terms and conditions"):
+        return controller.accept_terms(name=name, version=version)
